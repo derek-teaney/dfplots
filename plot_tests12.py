@@ -5,12 +5,10 @@ import h5py as h5
 import json
 import scienceplots
 
-plt.style.use(['science', 'nature'])
 
 # Set parameters to make it look like gnuplot
+plt.style.use(['science', 'nature'])
 
-# # set the color cycle
-#plt.rcParams['axes.prop_cycle'] = plt.cycler('color', ['#0C5DA5', '#00B945', '#FF9500', '#FF2C00', '#845B97', '#474747', '#9e9e9e'])
 plt.rcParams['axes.prop_cycle'] = plt.cycler('color', ['#0C5DA5', '#008F00', '#FF9500', '#FF2C00', '#845B97', '#474747', '#9e9e9e'])
 
 plt.rcParams['font.size'] = 8
@@ -25,7 +23,7 @@ plt.rcParams['ytick.labelsize'] = 8
 
 
 
-
+################################################################################
 def getEKTdata(lambdaekt,fourpietabys, tag='Ttt'):
     """ Returns the EKT data. The output is 
 
@@ -56,6 +54,7 @@ def getEKTdata(lambdaekt,fourpietabys, tag='Ttt'):
     return xekt, Tttekt, xarray, finaldata, finaltime
 
 
+################################################################################
 def getnames(fourpietabys, gaussian_const, gaussian_amplitude, gaussian_width):
     """ Return the filename for a gvien value of the paramaeters. This a helper function used by getdata """
     s='DFAndBDNK/nbys_{}_d_{}_A_{}_w_{}'.format(fourpietabys, gaussian_const, gaussian_amplitude, gaussian_width)
@@ -99,6 +98,7 @@ def getdata(fourpietabys,gaussian_const, gaussian_amplitude, gaussian_width, tag
     return x, finaldata, solverdata[-1,:], finaldata_ideal, data
 
 
+################################################################################
 def freefunction(finaltime, gaussian_const = 0.12, gaussian_amplitude = 0.48, gaussian_width = 25.0):
     """ Returns for the free theory 
 
@@ -119,6 +119,7 @@ def freefunction(finaltime, gaussian_const = 0.12, gaussian_amplitude = 0.48, ga
 
 ########################################################################
 def plotIC(case='DF', lambda_case=0):
+    """Plots the initial conditions """ 
 
     listetas=[0.180, 0.513, 1.48]
     listlambda=[20, 10, 5]
@@ -166,6 +167,7 @@ def plotIC(case='DF', lambda_case=0):
 
 ########################################################################
 def plotStress(case='DF', lambda_case=0):
+    """Makes a nice comparison between the density frame and kintec theory or BDNK and kinetic theory """
 
     gaussian_const = 0.12
     gaussian_amplitude = 0.48
@@ -215,6 +217,8 @@ def plotStress(case='DF', lambda_case=0):
     name = "test1_{}_{}.pdf".format(case,listlambda[lambda_case])
     fig1.savefig(name)
         
+################################################################################
+
 plotIC()
 plotStress(lambda_case=0)
 plotStress(lambda_case=1)
