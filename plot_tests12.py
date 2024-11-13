@@ -9,7 +9,7 @@ import scienceplots
 # Set parameters to make it look like gnuplot
 plt.style.use(['science', 'nature'])
 
-plt.rcParams['axes.prop_cycle'] = plt.cycler('color', ['#0C5DA5', '#008F00', '#FF9500', '#FF2C00', '#845B97', '#474747', '#9e9e9e'])
+plt.rcParams['axes.prop_cycle'] = plt.cycler('color', ['#0085CA', '#008F00', '#FF9500', '#FF2C00', '#845B97', '#474747', '#9e9e9e'])
 
 plt.rcParams['font.size'] = 8
 plt.rcParams['xtick.minor.visible'] = False
@@ -219,10 +219,118 @@ def plotStress(case='DF', lambda_case=0):
         
 ################################################################################
 
-plotIC()
-plotStress(lambda_case=0)
-plotStress(lambda_case=1)
-plotStress(lambda_case=2)
-plotStress(case='BDNK', lambda_case=0)
-plotStress(case='BDNK', lambda_case=1)
-plotStress(case='BDNK', lambda_case=2)
+def plotKTPlot1(case='DF'):
+    """Makes a nice comparison between the density frame and kintec theory for moderate coupling """
+
+    gaussian_const = 0.12
+    gaussian_amplitude = 0.48
+    gaussian_width = 25.0
+
+    listetas=[0.180, 0.513, 1.48]
+    etas4pi=4*np.pi*np.array(listetas)
+    listlambda=[20, 10, 5]
+
+    fig1, ax1 = plt.subplots()
+    ax1.set_xlim(-75, 75)
+    ax1.set_xticks([-75,-50,-25,0,25,50,75])
+    ax1.set_ylim(0.0, 0.32)
+
+    for i in range(0,2):
+
+        # Get the kinetic theory data
+        et = listetas[i] 
+        xekt, Tttekt, xarray, finaldata, finaltime  = getEKTdata(listlambda[i], et)
+
+        # Get density frame, bdnk, and idealhydro
+        x, df, bdnk, ideal, data = getdata(etas4pi[i], gaussian_const, gaussian_amplitude, gaussian_width)
+
+        # Get Free streaming data
+        xfree, freeTtt, freeTtx = freefunction(finaltime)
+
+
+        # For the first plot add the label
+        if i == 0: 
+            if case == 'DF':
+                ax1.plot(x, df, "C0", linewidth=1.2, label='density frame') 
+            else:
+                ax1.plot(x, bdnk, "C0", linewidth=1.2, label='BDNK') 
+
+            ax1.plot(xekt, Tttekt, "C3", linewidth=1.2, linestyle="--", label='QCD kinetics')
+        else:
+            if case == 'DF':
+                ax1.plot(x, df, "C0", linewidth=1.2) 
+            else:
+                ax1.plot(x, bdnk, "C0", linewidth=1.2) 
+
+            ax1.plot(xekt, Tttekt, "C3", linewidth=1.2, linestyle="--")
+
+    ax1.plot(x, ideal, "k:", linewidth=1.0, label="ideal hydro") 
+    ax1.set_xlabel(r'$x$')
+    ax1.set_ylabel(r'$T^{tt}$')
+
+    ax1.annotate(r'$4\pi\eta/s=0, {:.1f}, {:.1f}$'.format(4.0*np.pi*listetas[0], 4.0*np.pi*listetas[1]), (0.85,0.25), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
+
+    ax1.legend(loc="lower left")
+    fig1.tight_layout() 
+
+    fig1.savefig('KTPlot1.pdf')
+
+
+def plotKTPlot1b(case='DF'):
+    """Makes a nice comparison between the density frame and kintec theory for moderate coupling """
+
+    gaussian_const = 0.12
+    gaussian_amplitude = 0.48
+    gaussian_width = 25.0
+
+    listetas=[0.180, 0.513, 1.48]
+    etas4pi=4*np.pi*np.array(listetas)
+    listlambda=[20, 10, 5]
+
+    fig1, ax1 = plt.subplots()
+    ax1.set_xlim(-75, 75)
+    ax1.set_xticks([-75,-50,-25,0,25,50,75])
+    ax1.set_ylim(0.0, 0.32)
+
+
+    i= 2
+    # Get the kinetic theory data
+    et = listetas[i] 
+    xekt, Tttekt, xarray, finaldata, finaltime  = getEKTdata(listlambda[i], et)
+
+    # Get density frame, bdnk, and idealhydro
+    x, df, bdnk, ideal, data = getdata(etas4pi[i], gaussian_const, gaussian_amplitude, gaussian_width)
+
+    # Get Free streaming data
+    xfree, freeTtt, freeTtx = freefunction(finaltime)
+
+
+    if case == 'DF':
+        ax1.plot(x, df, "C0", linewidth=1.2, label='density frame') 
+    else:
+        ax1.plot(x, bdnk, "C0", linewidth=1.2, label='BDNK') 
+
+    ax1.plot(xekt, Tttekt, "C3", linewidth=1.2, linestyle="--", label='QCD kinetics')
+
+    ax1.plot(xfree, freeTtt, "k--", linewidth=0.5, label="free streaming") 
+
+    ax1.set_xlabel(r'$x$')
+    ax1.set_ylabel(r'$T^{tt}$')
+
+    ax1.annotate(r'$4\pi\eta/s={:.1f}$'.format(4.0*np.pi*listetas[2]), (0.85,0.25), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
+
+    ax1.legend(loc="lower left")
+
+    fig1.savefig('KTPlot1b.pdf')
+
+# plotIC()
+# plotStress(lambda_case=0)
+# plotStress(lambda_case=1)
+# plotStress(lambda_case=2)
+# plotStress(case='BDNK', lambda_case=0)
+# plotStress(case='BDNK', lambda_case=1)
+# plotStress(case='BDNK', lambda_case=2)
+
+plotKTPlot1()
+plotKTPlot1b()
+
