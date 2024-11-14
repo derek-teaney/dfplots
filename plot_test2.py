@@ -50,13 +50,6 @@ def getEKTdata(lambdaekt, testcase='test1', tag='Ttt'):
 
 
 ################################################################################
-
-# this returns the final names for the kinetic theory tests and is a helper for getdfdata
-def getnames(fourpietabys, gaussian_const, gaussian_amplitude, gaussian_width):
-    s='DFAndBDNK/nbys_{}_d_{}_A_{}_w_{}'.format(fourpietabys, gaussian_const, gaussian_amplitude, gaussian_width)
-    return './' + s.replace('.', 'd')
-
-
 # Structure holding the parameters for test1 and test2 which will be compared to kinetic theory. This is used  by getDFdata
 testcases = { 'test1' : 
                  {'const': 0.12, 'amplitude': 0.48  , 'width': 25.0, 'finaltime': 47.5, }, 
@@ -64,7 +57,24 @@ testcases = { 'test1' :
                  {'const': 0.06 , 'amplitude': 9.6 , 'width':  25.0, 'finaltime': 47.5, }, 
              }
 
-def getDFdata(fourpietabys,testcase='test1', tag='Ttt'):
+# Translation between lambda and eta/s
+etabys_of_lambdaekt={20:0.180, 10:0.513, 5:1.48}
+
+# List of available lambda
+list_lambdaekt=[20, 10, 5]
+
+# Corresponding eta
+list_etabys=[0.180, 0.513, 1.48] 
+
+
+# this returns the final names for the kinetic theory tests and is a helper for getdfdata
+def getnames(fourpietabys, gaussian_const, gaussian_amplitude, gaussian_width):
+    s='DFAndBDNK/nbys_{}_d_{}_A_{}_w_{}'.format(fourpietabys, gaussian_const, gaussian_amplitude, gaussian_width)
+    return './' + s.replace('.', 'd')
+
+
+
+def getDFdata(lambdaekt,testcase='test1', tag='Ttt', fourpietabys_in=None):
 
     """  Returns the density frame and BDNK data for a given run 
 
@@ -74,13 +84,14 @@ def getDFdata(fourpietabys,testcase='test1', tag='Ttt'):
     The info is an associative array containing the parameters of the run. If tag  can be 'Ttt' , 'Ttx', 'eps', or 'ux'
     """
 
+    fourpietabys = 4*np.pi*etabys_of_lambdaekt[lambdaekt]
+
     variables = {'Ttt':0, 'Ttx':1, 'eps':2, 'ux':3 }  
     params = testcases[testcase]
 
     name = getnames(fourpietabys, params['const'], params['amplitude'] , params['width'])
     name0 = getnames(0.0, params['const'], params['amplitude'], params['width'])
 
-    print(name, name0)
     data = json.load(open(name + '.json'))
 
     with h5.File(name + '.h5', 'r') as file:
@@ -172,26 +183,23 @@ def freefunction(testcase='test1'):
 
 
 ########################################################################
-def plotStress(case='DF', lambda_case=0):
+def plotStress(case='DF', lambdaekt=20):
     """Makes a nice comparison between the density frame and kintec theory or BDNK and kinetic theory """
 
-    listetas=[0.180, 0.513, 1.48]
-    etas4pi=4*np.pi*np.array(listetas)
-    listlambda=[20, 10, 5]
 
     fig1, ax1 = plt.subplots()
     ax1.set_xlim(-75, 75)
     ax1.set_xticks([-75,-50,-25,0,25,50,75])
     ax1.set_ylim(0.0, 0.50)
 
-    i = lambda_case
-
     # Get the kinetic theory data
-    et = listetas[i] 
-    xekt, Tttekt  = getEKTdata(listlambda[i])
+    lambdaekt 
+    et = etabys_of_lambdaekt[lambdaekt] 
+
+    xekt, Tttekt  = getEKTdata(lambdaekt)
 
     # Get density frame, bdnk, and idealhydro
-    x, df, bdnk, ideal, data = getDFdata(etas4pi[i])
+    x, df, bdnk, ideal, data = getDFdata(lambdaekt)
 
     # Get Free streaming data
     xfree, freeTtt, freeTtx = freefunction()
@@ -216,22 +224,13 @@ def plotStress(case='DF', lambda_case=0):
     ax1.set_ylabel(r'$T^{tt}$')
     fig1.tight_layout() 
 
-    name = "test1_{}_{}.pdf".format(case,listlambda[lambda_case])
+    name = "test1_{}_{}.pdf".format(case,lambdaekt)
     fig1.savefig(name)
         
 ################################################################################
 
 def plotKTPlot1(case='DF'):
     """Makes a nice comparison between the density frame and kintec theory for moderate coupling """
-
-    finaltime=47.5
-    gaussian_const = 0.12
-    gaussian_amplitude = 0.48
-    gaussian_width = 25.0
-
-    listetas=[0.180, 0.513, 1.48]
-    etas4pi=4*np.pi*np.array(listetas)
-    listlambda=[20, 10, 5]
 
     fig1, ax1 = plt.subplots()
     ax1.set_xlim(-75, 75)
@@ -241,11 +240,13 @@ def plotKTPlot1(case='DF'):
     for i in range(0,2):
 
         # Get the kinetic theory data
-        et = listetas[i] 
-        xekt, Tttekt  = getEKTdata(listlambda[i])
+        lambdaekt= list_lambdaekt[i]
+        et = list_etabys[i]
+
+        xekt, Tttekt  = getEKTdata(lambdaekt)
 
         # Get density frame, bdnk, and idealhydro
-        x, df, bdnk, ideal, data = getDFdata(etas4pi[i])
+        x, df, bdnk, ideal, data = getDFdata(lambdaekt)
 
         # Get Free streaming data
         xfree, freeTtt, freeTtx = freefunction()
@@ -271,7 +272,7 @@ def plotKTPlot1(case='DF'):
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$T^{tt}$')
 
-    ax1.annotate(r'$4\pi\eta/s=0, {:.1f}, {:.1f}$'.format(4.0*np.pi*listetas[0], 4.0*np.pi*listetas[1]), (0.85,0.25), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
+    ax1.annotate(r'$4\pi\eta/s=0, {:.1f}, {:.1f}$'.format(4.0*np.pi*list_etabys[0], 4.0*np.pi*list_etabys[1]), (0.85,0.25), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
 
     ax1.legend(loc="lower left")
     fig1.tight_layout() 
@@ -282,11 +283,7 @@ def plotKTPlot1(case='DF'):
 def plotKTPlot1b(case='DF'):
     """Makes a nice comparison between the density frame and kintec theory for moderate coupling """
 
-    finaltime=47.5
 
-    listetas=[0.180, 0.513, 1.48]
-    etas4pi=4*np.pi*np.array(listetas)
-    listlambda=[20, 10, 5]
 
     fig1, ax1 = plt.subplots()
     ax1.set_xlim(-75, 75)
@@ -296,11 +293,11 @@ def plotKTPlot1b(case='DF'):
 
     i= 2
     # Get the kinetic theory data
-    et = listetas[i] 
-    xekt, Tttekt  = getEKTdata(listlambda[i])
+    lambdaekt = list_lambdaekt[i] 
+    xekt, Tttekt  = getEKTdata(lambdaekt)
 
     # Get density frame, bdnk, and idealhydro
-    x, df, bdnk, ideal, data = getDFdata(etas4pi[i])
+    x, df, bdnk, ideal, data = getDFdata(lambdaekt)
 
     # Get Free streaming data
     xfree, freeTtt, freeTtx = freefunction()
@@ -318,7 +315,7 @@ def plotKTPlot1b(case='DF'):
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$T^{tt}$')
 
-    ax1.annotate(r'$4\pi\eta/s={:.1f}$'.format(4.0*np.pi*listetas[2]), (0.85,0.25), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
+    ax1.annotate(r'$4\pi\eta/s={:.1f}$'.format(4.0*np.pi*list_etabys[2]), (0.85,0.25), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
 
     ax1.legend(loc="lower left")
 
@@ -326,15 +323,6 @@ def plotKTPlot1b(case='DF'):
 
 def plotKTPlot2(case='DF'):
     """Makes a nice comparison between the density frame and kintec theory for moderate coupling """
-
-    finaltime=47.5
-    gaussian_const = 0.06
-    gaussian_amplitude = 9.6
-    gaussian_width = 25.0
-
-    listetas=[0.180, 0.513, 1.48]
-    etas4pi=4*np.pi*np.array(listetas)
-    listlambda=[20, 10, 5]
 
     fig1, ax1 = plt.subplots()
     ax1.set_xlim(-75, 75)
@@ -345,22 +333,20 @@ def plotKTPlot2(case='DF'):
     #colors = ['C3',mcolors.TABLEAU_COLORS['tab:pink'],'C2']
     #colors = ['C3',mcolors.BASE_COLORS['m'],'C2']
 
-    print(mcolors.BASE_COLORS)
-    print(mcolors.TABLEAU_COLORS)
 
     labels=[]
-    for i  in range(0,3):
-        labels.append(r'$4\pi\eta/s={:.1f}$'.format(4.0*np.pi*listetas[i]))
-    print(labels)
+    for i in range(0,3):
+        labels.append(r'$4\pi\eta/s={:.1f}$'.format(4.0*np.pi*list_etabys[i]))
 
     for i in range(0,3):
 
         # Get the kinetic theory data
-        et = listetas[i] 
-        xekt, Tttekt  = getEKTdata(listlambda[i], testcase='test2')
+        et = list_etabys[i] 
+        lambdaekt = list_lambdaekt[i]
+        xekt, Tttekt  = getEKTdata(lambdaekt, testcase='test2')
 
         # Get density frame, bdnk, and idealhydro
-        x, df, bdnk, ideal, data = getDFdata(etas4pi[i], testcase='test2')
+        x, df, bdnk, ideal, data = getDFdata(lambdaekt, testcase='test2')
 
         # Get Free streaming data
         xfree, freeTtt, freeTtx = freefunction(testcase='test2')
@@ -383,14 +369,6 @@ def plotKTPlot2(case='DF'):
 def plotKTPlot1(case='DF'):
     """ Plots kinetic theory results for test1 """
 
-    finaltime = 47.5
-    gaussian_const = 0.12
-    gaussian_amplitude = 0.48
-    gaussian_width = 25.0
-
-    listetas=[0.180, 0.513, 1.48]
-    etas4pi=4*np.pi*np.array(listetas)
-    listlambda=[20, 10, 5]
 
     fig1, ax1 = plt.subplots()
     ax1.set_xlim(-75, 75)
@@ -402,22 +380,20 @@ def plotKTPlot1(case='DF'):
     #colors = ['C3',mcolors.TABLEAU_COLORS['tab:pink'],'C2']
     #colors = ['C3',mcolors.BASE_COLORS['m'],'C2']
 
-    print(mcolors.BASE_COLORS)
-    print(mcolors.TABLEAU_COLORS)
 
     labels=[]
     for i  in range(0,3):
-        labels.append(r'$4\pi\eta/s={:.1f}$'.format(4.0*np.pi*listetas[i]))
-    print(labels)
+        labels.append(r'$4\pi\eta/s={:.1f}$'.format(4.0*np.pi*list_etabys[i]))
 
     for i in range(0,3):
 
         # Get the kinetic theory data
-        et = listetas[i] 
-        xekt, Tttekt = getEKTdata(listlambda[i], testcase='test1')
+        et = list_etabys[i] 
+        lambdaekt = list_lambdaekt[i]
+        xekt, Tttekt = getEKTdata(lambdaekt, testcase='test1')
 
         # Get density frame, bdnk, and idealhydro
-        x, df, bdnk, ideal, data = getDFdata(etas4pi[i], testcase='test1')
+        x, df, bdnk, ideal, data = getDFdata(lambdaekt, testcase='test1')
 
         # Get Free streaming data
         xfree, freeTtt, freeTtx = freefunction()
@@ -442,12 +418,12 @@ plotKTPlot2(case='DF')
 
 
 # plotIC()
-plotStress(lambda_case=0)
-plotStress(lambda_case=1)
-plotStress(lambda_case=2)
-plotStress(case='BDNK', lambda_case=0)
-plotStress(case='BDNK', lambda_case=1)
-plotStress(case='BDNK', lambda_case=2)
+plotStress(lambdaekt=20)
+plotStress(lambdaekt=10)
+plotStress(lambdaekt=5)
+plotStress(case='BDNK', lambdaekt=20)
+plotStress(case='BDNK', lambdaekt=10)
+plotStress(case='BDNK', lambdaekt=5)
 
 plotKTPlot1()
 plotKTPlot1b()
