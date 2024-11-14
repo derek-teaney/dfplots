@@ -30,6 +30,8 @@ def getEKTdata(lambdaekt, testcase='test1', tag='Ttt'):
     x[:], TttEKT[:], TttDF[:], finaltime 
 
     If tag='Ttx' this function returns  Ttx instead of Ttt
+
+    lambdaekt should be one of 20,10,5 as is listed in list_lambdaekt
     """
 
     Nz=150
