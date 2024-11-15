@@ -9,7 +9,7 @@ import matplotlib.colors as mcolors
 # Set parameters to make it look like gnuplot
 plt.style.use(['science', 'nature'])
 
-plt.rcParams['axes.prop_cycle'] = plt.cycler('color', ['#0085CA', '#008F00', '#FF9500', '#FF2C00', '#845B97', '#474747', '#9e9e9e'])
+plt.rcParams['axes.prop_cycle'] = plt.cycler('color', ['#0085CA', '#008F00', '#FF9500', '#FF2C00', '#845B97', '#474747', '#9e9e9e', mcolors.CSS4_COLORS["salmon"]])
 
 plt.rcParams['font.size'] = 8
 plt.rcParams['xtick.minor.visible'] = False
@@ -20,7 +20,6 @@ plt.rcParams['axes.labelsize'] =  8
 plt.rcParams['legend.fontsize'] = 8
 plt.rcParams['xtick.labelsize'] = 8
 plt.rcParams['ytick.labelsize'] = 8
-
 
 
 ################################################################################
@@ -41,9 +40,13 @@ def getEKTdata(lambdaekt, testcase='test1', tag='Ttt'):
 
     EKTdata=np.loadtxt("./new_EKT/%s_L%d_gluon_Tmunu_vs_time.out" % (testcase, lambdaekt))
     nx,ny = EKTdata.shape
+
+    print(nx,ny)
     EKTdata.shape=(nx//Nz,Nz,ny)
+    print(EKTdata.shape)
     sl=-1
     xekt = EKTdata[0,:,18] 
+
 
     # Get Either the  Ttt component or Ttx component
     Tttekt = nug*EKTdata[sl,:,variables[tag]]
@@ -52,11 +55,36 @@ def getEKTdata(lambdaekt, testcase='test1', tag='Ttt'):
 
 
 ################################################################################
+def getMUSICdata(visMUSIC, testcase='test1', tag='Ttt', tfinal=50, shear_relax_factor='5'):
+    """ Returns the MUSIC data. The output is 
+
+    x[:], TttMUSIC[:] 
+
+    If tag='Ttx' this function returns  Ttx instead of Ttt
+
+    shear_relax_factor should be '5' or '0p5'
+    """
+
+    variables = {'Ttt':4, 'Ttx':5}
+
+    filename='{}_tfinal_{}.dat'.format(visMUSIC, tfinal)
+    foldername="./music_data/shear_relax_%s/%s/" % (shear_relax_factor, testcase)
+    MUSICdata=np.loadtxt(foldername + filename, skiprows=1)
+    nx,ny = MUSICdata.shape
+    xmusic = MUSICdata[:,1] 
+
+    # Get Either the  Ttt component or Ttx component
+    Tttmusic = MUSICdata[:,variables[tag]]
+
+    return xmusic, Tttmusic
+
+
+################################################################################
 # Structure holding the parameters for test1 and test2 which will be compared to kinetic theory. This is used  by getDFdata
 testcases = { 'test1' : 
-                 {'const': 0.12, 'amplitude': 0.48  , 'width': 25.0, 'finaltime': 47.5, }, 
+                 {'const': 0.12, 'amplitude': 0.48  , 'width': 25.0, 'finaltime': 50.0, }, 
               'test2'  :
-                 {'const': 0.06 , 'amplitude': 9.6 , 'width':  25.0, 'finaltime': 47.5, }, 
+                 {'const': 0.06 , 'amplitude': 9.6 , 'width':  25.0, 'finaltime': 50.0, }, 
              }
 
 # Translation between lambda and eta/s
@@ -203,14 +231,18 @@ def plotStress(case='DF', lambdaekt=20):
     # Get density frame, bdnk, and idealhydro
     x, df, bdnk, ideal, data = getDFdata(lambdaekt)
 
+    # Get the MUSIC data
+    xmusic, Tttmusic  = getMUSICdata(et)
     # Get Free streaming data
     xfree, freeTtt, freeTtx = freefunction()
 
 
     if case == 'DF':
         ax1.plot(x, df, "C0", linewidth=1.2, label='Density Frame') 
-    else:
+    elif case == 'BDNK':
         ax1.plot(x, bdnk, "C0", linewidth=1.2, label='BDNK') 
+    else:
+        ax1.plot(xmusic, Tttmusic, "C0", linewidth=1.2, label='MUSIC') 
 
     ax1.plot(xekt, Tttekt, "C3", linestyle=(0,(3,2)), linewidth=1.2, label='QCD kinetics')
 
@@ -240,6 +272,25 @@ def plotKTPlot1(case='DF'):
     ax1.set_ylim(0.0, 0.32)
 
     for i in range(0,2):
+        # Get density frame, bdnk, and idealhydro
+        x, df, bdnk, ideal, data = getDFdata(list_lambdaekt[i])
+
+        # Get the MUSIC data
+        xmusic, Tttmusic  = getMUSICdata(list_etabys[i])
+        # For the first plot add the label
+        if i == 0: 
+            if case == 'DF':
+                ax1.plot(x, df, "C0", linewidth=1.0, label='density frame') 
+            elif case == 'MUSIC':
+                ax1.plot(xmusic, Tttmusic, "C6", linewidth=1.0, label='MUSIC') 
+        else:
+            if case == 'DF':
+                ax1.plot(x, df, "C0", linewidth=1.0) 
+            elif case == 'MUSIC':
+                ax1.plot(xmusic, Tttmusic, "C6", linewidth=1.0) 
+
+
+    for i in range(0,2):
 
         # Get the kinetic theory data
         lambdaekt= list_lambdaekt[i]
@@ -247,34 +298,25 @@ def plotKTPlot1(case='DF'):
 
         xekt, Tttekt  = getEKTdata(lambdaekt)
 
-        # Get density frame, bdnk, and idealhydro
-        x, df, bdnk, ideal, data = getDFdata(lambdaekt)
-
         # Get Free streaming data
         xfree, freeTtt, freeTtx = freefunction()
 
 
         # For the first plot add the label
         if i == 0: 
-            if case == 'DF':
-                ax1.plot(x, df, "C0", linewidth=1.2, label='density frame') 
-            else:
-                ax1.plot(x, bdnk, "C0", linewidth=1.2, label='BDNK') 
-
-            ax1.plot(xekt, Tttekt, "C3", linewidth=1.2, linestyle="--", label='QCD kinetics')
+            ax1.plot(xekt, Tttekt, "C3", linewidth=1.0, linestyle="--", label='QCD kinetics')
         else:
-            if case == 'DF':
-                ax1.plot(x, df, "C0", linewidth=1.2) 
-            else:
-                ax1.plot(x, bdnk, "C0", linewidth=1.2) 
+            ax1.plot(xekt, Tttekt, "C2", linewidth=1.0, linestyle="--")
 
-            ax1.plot(xekt, Tttekt, "C3", linewidth=1.2, linestyle="--")
-
-    ax1.plot(x, ideal, "k:", linewidth=1.0, label="ideal hydro") 
+    ax1.plot(x, ideal, "k--", linewidth=0.5, label="ideal hydro") 
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$T^{tt}$')
 
-    ax1.annotate(r'$4\pi\eta/s=0, {:.1f}, {:.1f}$'.format(4.0*np.pi*list_etabys[0], 4.0*np.pi*list_etabys[1]), (0.85,0.25), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
+    # # Get Free streaming data
+    # xfree, freeTtt, freeTtx = freefunction()
+    # ax1.plot(xfree, freeTtt, "k--", linewidth=0.5, label="free streaming") 
+
+    ax1.annotate(r'$4\pi\eta/s$={:.1f} and ${:.1f}$'.format(4.0*np.pi*list_etabys[0], 4.0*np.pi*list_etabys[1]), (0.85,0.25), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
 
     ax1.legend(loc="lower left")
     fig1.tight_layout() 
@@ -283,7 +325,7 @@ def plotKTPlot1(case='DF'):
 
 
 def plotKTPlot1b(case='DF'):
-    """Makes a nice comparison between the density frame and kintec theory for moderate coupling """
+    """Makes a nice comparison between the density frame and kintec theory for weak coupling """
 
 
 
@@ -291,7 +333,6 @@ def plotKTPlot1b(case='DF'):
     ax1.set_xlim(-75, 75)
     ax1.set_xticks([-75,-50,-25,0,25,50,75])
     ax1.set_ylim(0.0, 0.32)
-
 
     i= 2
     # Get the kinetic theory data
@@ -304,13 +345,15 @@ def plotKTPlot1b(case='DF'):
     # Get Free streaming data
     xfree, freeTtt, freeTtx = freefunction()
 
+    # Get the MUSIC data
+    xmusic, Tttmusic  = getMUSICdata(list_etabys[i])
 
     if case == 'DF':
-        ax1.plot(x, df, "C0", linewidth=1.2, label='density frame') 
-    else:
-        ax1.plot(x, bdnk, "C0", linewidth=1.2, label='BDNK') 
+        ax1.plot(x, df, "C0", linewidth=1.0, label='density frame') 
+    elif case == 'MUSIC':
+        ax1.plot(xmusic, Tttmusic, "C6", linewidth=1.0, label='MUSIC') 
 
-    ax1.plot(xekt, Tttekt, "C3", linewidth=1.2, linestyle="--", label='QCD kinetics')
+    ax1.plot(xekt, Tttekt, "C7" , linewidth=1.2, linestyle="--", label='QCD kinetics')
 
     ax1.plot(xfree, freeTtt, "k--", linewidth=0.5, label="free streaming") 
 
@@ -329,46 +372,102 @@ def plotKTPlot2(case='DF'):
     fig1, ax1 = plt.subplots()
     ax1.set_xlim(-75, 75)
     ax1.set_xticks([-75,-50,-25,0,25,50,75])
-    ax1.set_ylim(0.0, 4.5)
+    ax1.set_ylim(0.0, 3.7)
 
-    colors = ['C3',mcolors.CSS4_COLORS['peachpuff'],'C2']
-    #colors = ['C3',mcolors.TABLEAU_COLORS['tab:pink'],'C2']
-    #colors = ['C3',mcolors.BASE_COLORS['m'],'C2']
+    for i in range(0,2):
+        # Get density frame, bdnk, and idealhydro
+        x, df, bdnk, ideal, data = getDFdata(list_lambdaekt[i], testcase='test2')
+
+        # Get the MUSIC data
+        xmusic, Tttmusic  = getMUSICdata(list_etabys[i], testcase='test2')
+        # For the first plot add the label
+        if i == 0: 
+            if case == 'DF':
+                ax1.plot(x, df, "C0", linewidth=1.0, label='density frame') 
+            elif case == 'MUSIC':
+                ax1.plot(xmusic, Tttmusic, "C6", linewidth=1.0, label='MUSIC') 
+        else:
+            if case == 'DF':
+                ax1.plot(x, df, "C0", linewidth=1.0) 
+            elif case == 'MUSIC':
+                ax1.plot(xmusic, Tttmusic, "C6", linewidth=1.0) 
 
 
-    labels=[]
-    for i in range(0,3):
-        labels.append(r'$4\pi\eta/s={:.1f}$'.format(4.0*np.pi*list_etabys[i]))
-
-    for i in range(0,3):
+    for i in range(0,2):
 
         # Get the kinetic theory data
-        et = list_etabys[i] 
-        lambdaekt = list_lambdaekt[i]
-        xekt, Tttekt  = getEKTdata(lambdaekt, testcase='test2')
+        lambdaekt= list_lambdaekt[i]
+        et = list_etabys[i]
 
-        # Get density frame, bdnk, and idealhydro
-        x, df, bdnk, ideal, data = getDFdata(lambdaekt, testcase='test2')
+        xekt, Tttekt  = getEKTdata(lambdaekt, testcase='test2')
 
         # Get Free streaming data
         xfree, freeTtt, freeTtx = freefunction(testcase='test2')
 
-        ax1.plot(xekt, Tttekt,'C0', linewidth=1.2) 
 
-        # if i == 0:
-        #     ax1.plot(x, ideal, "k--", linewidth=0.5, label=r"ideal hydro") 
+        # For the first plot add the label
+        if i == 0: 
+            ax1.plot(xekt, Tttekt, "C3", linewidth=1.0, linestyle="--", label='QCD kinetics')
+        else:
+            ax1.plot(xekt, Tttekt, "C2", linewidth=1.0, linestyle="--")
 
-        ax1.plot(xekt, Tttekt, color=colors[i], linewidth=1.2, linestyle="--", label=labels[i])
-
-    #ax1.plot(xfree, freeTtt, "k:", linewidth=0.5, label=r"free stream") 
+    ax1.plot(x, ideal, "k--", linewidth=0.5, label="ideal hydro") 
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$T^{tt}$')
-    ax1.legend(loc="upper left",title='QCD kinetics', fontsize=8)
 
-    ax1.annotate("test 2", (0.87,0.8), ha='right', xycoords='figure fraction')
-    fig1.savefig('KineticOnlyT2.pdf')
+    # # Get Free streaming data
+    # xfree, freeTtt, freeTtx = freefunction()
+    # ax1.plot(xfree, freeTtt, "k--", linewidth=0.5, label="free streaming") 
 
-def plotKTPlot1(case='DF'):
+    ax1.annotate(r'$4\pi\eta/s$={:.1f} and ${:.1f}$'.format(4.0*np.pi*list_etabys[0], 4.0*np.pi*list_etabys[1]), (0.85,0.80), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
+
+    ax1.legend(loc="upper left")
+    fig1.tight_layout() 
+
+    fig1.savefig('KTPlot2.pdf')
+
+
+def plotKTPlot2b(case='DF'):
+    """Makes a nice comparison between the density frame and kintec theory for weak coupling """
+
+    fig1, ax1 = plt.subplots()
+    ax1.set_xlim(-75, 75)
+    ax1.set_xticks([-75,-50,-25,0,25,50,75])
+    ax1.set_ylim(0.0, 3.7)
+
+    i= 2
+    # Get the kinetic theory data
+    lambdaekt = list_lambdaekt[i] 
+    xekt, Tttekt  = getEKTdata(lambdaekt,testcase='test2')
+
+    # Get density frame, bdnk, and idealhydro
+    x, df, bdnk, ideal, data = getDFdata(lambdaekt ,  testcase='test2')
+
+    # Get Free streaming data
+    xfree, freeTtt, freeTtx = freefunction(testcase='test2')
+
+    # Get the MUSIC data
+    xmusic, Tttmusic  = getMUSICdata(list_etabys[i], testcase='test2')
+
+    if case == 'DF':
+        ax1.plot(x, df, "C0", linewidth=1.0, label='density frame') 
+    elif case == 'MUSIC':
+        ax1.plot(xmusic, Tttmusic, "C6", linewidth=1.0, label='MUSIC') 
+
+    ax1.plot(xekt, Tttekt, "C7" , linewidth=1.2, linestyle="--", label='QCD kinetics')
+
+    ax1.plot(xfree, freeTtt, "k--", linewidth=0.5, label="free streaming") 
+
+    ax1.set_xlabel(r'$x$')
+    ax1.set_ylabel(r'$T^{tt}$')
+
+    ax1.annotate(r'$4\pi\eta/s={:.1f}$'.format(4.0*np.pi*list_etabys[2]), (0.85,0.80), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
+
+    ax1.legend(loc="upper left")
+
+    fig1.savefig('KTPlot2b.pdf')
+
+def plotKTOnlyPlot2(case='DF',figname='KineticOnlyT2.pdf'):
     """ Plots kinetic theory results for test1 """
 
 
@@ -376,9 +475,11 @@ def plotKTPlot1(case='DF'):
     ax1.set_xlim(-75, 75)
     ax1.set_ylim(0.0, 0.5)
     ax1.set_xticks([-75,-50,-25,0,25,50,75])
-    #ax1.set_ylim(0.0, 3.25)
+    ax1.set_ylim(0.0, 4.0)
+    #ax1.set_ylim(0.0, 0.35)
 
-    colors = ['C3',mcolors.CSS4_COLORS['peachpuff'],'C2']
+    #colors = ['C3',mcolors.CSS4_COLORS['peachpuff'],'C2']
+    colors = ['C3', 'C2','C7']
     #colors = ['C3',mcolors.TABLEAU_COLORS['tab:pink'],'C2']
     #colors = ['C3',mcolors.BASE_COLORS['m'],'C2']
 
@@ -386,6 +487,62 @@ def plotKTPlot1(case='DF'):
     labels=[]
     for i  in range(0,3):
         labels.append(r'$4\pi\eta/s={:.1f}$'.format(4.0*np.pi*list_etabys[i]))
+
+
+    for i in range(0,3):
+
+        # Get the kinetic theory data
+        et = list_etabys[i] 
+        lambdaekt = list_lambdaekt[i]
+        xekt, Tttekt = getEKTdata(lambdaekt, testcase='test2')
+
+        # Get density frame, bdnk, and idealhydro
+        x, df, bdnk, ideal, data = getDFdata(lambdaekt, testcase='test2')
+
+        # Get Free streaming data
+        xfree, freeTtt, freeTtx = freefunction(
+            testcase='test2')
+
+        #ax1.plot(xekt, Tttekt,'o', markersize=2.0, markerfacecolor='none', markeredgecolor=colors[i], markeredgewidth=0.5, linewidth=0.5) 
+
+        #ax1.plot(x, df,color='C0', linewidth=1.2)
+
+        ax1.plot(xekt, Tttekt,"--", color=colors[i], linewidth=1.0) 
+
+
+        if i == 0:
+            ax1.plot(x, ideal, "k--", linewidth=0.5, label=r"ideal hydro") 
+        #
+        # ax1.plot(xekt, Tttekt, color=colors[i], linewidth=1.2, linestyle="--", label=labels[i])
+
+    ax1.plot(xfree, freeTtt, "k:", linewidth=0.7, label=r"free stream") 
+    ax1.set_xlabel(r'$x$')
+    ax1.set_ylabel(r'$T^{tt}$')
+    ax1.legend(loc="upper center",fontsize=8)
+
+    #ax1.annotate("QCD kinetics\ntest 1", (0.87,0.8), ha='right', xycoords='figure fraction')
+    fig1.savefig(figname)
+
+def plotKTOnlyPlot1(case='DF',figname='KineticOnlyT1.pdf'):
+    """ Plots kinetic theory results for test1 """
+
+
+    fig1, ax1 = plt.subplots()
+    ax1.set_xlim(-75, 75)
+    ax1.set_ylim(0.0, 0.5)
+    ax1.set_xticks([-75,-50,-25,0,25,50,75])
+    ax1.set_ylim(0.0, 0.35)
+
+    #colors = ['C3',mcolors.CSS4_COLORS['peachpuff'],'C2']
+    colors = ['C3', 'C2','C7']
+    #colors = ['C3',mcolors.TABLEAU_COLORS['tab:pink'],'C2']
+    #colors = ['C3',mcolors.BASE_COLORS['m'],'C2']
+
+
+    labels=[]
+    for i  in range(0,3):
+        labels.append(r'$4\pi\eta/s={:.1f}$'.format(4.0*np.pi*list_etabys[i]))
+
 
     for i in range(0,3):
 
@@ -400,33 +557,45 @@ def plotKTPlot1(case='DF'):
         # Get Free streaming data
         xfree, freeTtt, freeTtx = freefunction()
 
-        ax1.plot(xekt, Tttekt,'C0', linewidth=1.2) 
+        #ax1.plot(xekt, Tttekt,'o', markersize=2.0, markerfacecolor='none', markeredgecolor=colors[i], markeredgewidth=0.5, linewidth=0.5) 
 
-        #if i == 0:
-            #ax1.plot(x, ideal, "k--", linewidth=0.5, label=r"ideal hydro") 
+        #ax1.plot(x, df,color='C0', linewidth=1.2)
 
-        ax1.plot(xekt, Tttekt, color=colors[i], linewidth=1.2, linestyle="--", label=labels[i])
+        ax1.plot(xekt, Tttekt,"--", color=colors[i], linewidth=1.0) 
 
-    #ax1.plot(xfree, freeTtt, "k:", linewidth=0.5, label=r"free stream") 
+
+        if i == 0:
+            ax1.plot(x, ideal, "k--", linewidth=0.5, label=r"ideal hydro") 
+        #
+        # ax1.plot(xekt, Tttekt, color=colors[i], linewidth=1.2, linestyle="--", label=labels[i])
+
+    ax1.plot(xfree, freeTtt, "k:", linewidth=0.8, label=r"free stream") 
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$T^{tt}$')
     ax1.legend(loc="upper center",fontsize=8)
 
-    ax1.annotate("QCD kinetics\ntest 1", (0.87,0.8), ha='right', xycoords='figure fraction')
-    fig1.savefig('KineticOnlyT1.pdf')
+    #ax1.annotate("QCD kinetics\ntest 1", (0.87,0.8), ha='right', xycoords='figure fraction')
+    fig1.savefig(figname)
+
+plotKTOnlyPlot2()
+#plotKTOnlyPlot1()
+# # plotIC()
+# plotStress(lambdaekt=20)
+# plotStress(lambdaekt=10)
+# plotStress(lambdaekt=5)
+# plotStress(case='DF', lambdaekt=20)
+# plotStress(case='DF', lambdaekt=10)
+# plotStress(case='DF', lambdaekt=5)
+# plotStress(case='BDNK', lambdaekt=20)
+# plotStress(case='BDNK', lambdaekt=10)
+# plotStress(case='BDNK', lambdaekt=5)
+# plotStress(case='MUSIC', lambdaekt=20)
+# plotStress(case='MUSIC', lambdaekt=10)
+# plotStress(case='MUSIC', lambdaekt=5)
+
+#plotKTPlot1(case='MUSIC')
+#plotKTPlot1b(case='DF')
 
 plotKTPlot2(case='DF')
-
-
-
-# plotIC()
-plotStress(lambdaekt=20)
-plotStress(lambdaekt=10)
-plotStress(lambdaekt=5)
-plotStress(case='BDNK', lambdaekt=20)
-plotStress(case='BDNK', lambdaekt=10)
-plotStress(case='BDNK', lambdaekt=5)
-
-plotKTPlot1()
-plotKTPlot1b()
-
+plotKTPlot2b(case='DF')
+#plotKTPlot1b(case='DF')

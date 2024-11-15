@@ -41,8 +41,9 @@ def getEKTdata(lambdaekt,fourpietabys, tag='Ttt', testcase='test1'):
     EKTdata=np.loadtxt("./new_EKT/%s_L%d_gluon_Tmunu_vs_time.out" % (testcase, lambdaekt))
     nx,ny = EKTdata.shape
     EKTdata.shape=(nx//Nz,Nz,ny)
-    sl=-1
+    sl=-6
     xekt = EKTdata[0,:,18] 
+
 
     # Get Either the  Ttt component or Ttx component
     Tttekt = nug*EKTdata[sl,:,variables[tag]]
