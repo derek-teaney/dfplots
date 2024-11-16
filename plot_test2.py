@@ -246,8 +246,8 @@ def plotStress(case='DF', lambdaekt=20):
 
     ax1.plot(xekt, Tttekt, "C3", linestyle=(0,(3,2)), linewidth=1.2, label='QCD kinetics')
 
-    ax1.plot(x, ideal, "k--", linewidth=0.5, label=r"$\eta/s=0$ and $\infty$") 
-    ax1.plot(xfree, freeTtt, "k--", linewidth=0.5)
+    ax1.plot(x, ideal, "k--", linewidth=0.8, label=r"$\eta/s=0$ and $\infty$") 
+    ax1.plot(xfree, freeTtt, "k--", linewidth=0.8)
 
     # ax1.legend(frameon=True,loc="lower left", fancybox=False, framealpha=0.8, edgecolor='white')
     # Set a text label with the value of eta/s
@@ -355,7 +355,7 @@ def plotKTPlot1b(case='DF'):
 
     ax1.plot(xekt, Tttekt, "C4" , linewidth=1.3, linestyle="--", label='QCD kinetics')
 
-    ax1.plot(xfree, freeTtt, "k--", linewidth=0.8, label="free streaming") 
+    ax1.plot(xfree, freeTtt, "k:", linewidth=0.8, label="free streaming") 
 
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$T^{tt}$')
@@ -411,7 +411,7 @@ def plotKTPlot2(case='DF'):
         else:
             ax1.plot(xekt, Tttekt, "C2", linewidth=1.3, linestyle="--")
 
-    ax1.plot(x, ideal, "k--", linewidth=0.8, label="ideal hydro") 
+    ax1.plot(x, ideal, "k--", linewidth=0.80, label="ideal hydro") 
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$T^{tt}$')
 
@@ -456,7 +456,7 @@ def plotKTPlot2b(case='DF'):
 
     ax1.plot(xekt, Tttekt, "C4" , linewidth=1.3, linestyle="--", label='QCD kinetics')
 
-    ax1.plot(xfree, freeTtt, "k--", linewidth=0.8, label="free streaming") 
+    ax1.plot(xfree, freeTtt, "k:", linewidth=0.80, label="free streaming") 
 
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$T^{tt}$')
@@ -507,15 +507,16 @@ def plotKTOnlyPlot2(case='DF',figname='KineticOnlyT2.pdf'):
 
         #ax1.plot(x, df,color='C0', linewidth=1.2)
 
+        if i == 0:
+            ax1.plot(x, ideal, "k--", linewidth=0.80, label=r"ideal hydro") 
+
         ax1.plot(xekt, Tttekt,"--", color=colors[i], linewidth=1.3) 
 
 
-        if i == 0:
-            ax1.plot(x, ideal, "k--", linewidth=0.8, label=r"ideal hydro") 
         #
         # ax1.plot(xekt, Tttekt, color=colors[i], linewidth=1.2, linestyle="--", label=labels[i])
 
-    ax1.plot(xfree, freeTtt, "k:", linewidth=0.8, label=r"free stream") 
+    ax1.plot(xfree, freeTtt, "k:", linewidth=0.80, label=r"free streaming") 
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$T^{tt}$')
     ax1.legend(loc="upper center",fontsize=8)
@@ -560,16 +561,16 @@ def plotKTOnlyPlot1(case='DF',figname='KineticOnlyT1.pdf'):
         #ax1.plot(xekt, Tttekt,'o', markersize=2.0, markerfacecolor='none', markeredgecolor=colors[i], markeredgewidth=0.5, linewidth=0.5) 
 
         #ax1.plot(x, df,color='C0', linewidth=1.2)
+        if i == 0:
+            ax1.plot(x, ideal, "k--", linewidth=0.80, label=r"ideal hydro") 
 
         ax1.plot(xekt, Tttekt,"--", color=colors[i], linewidth=1.3) 
 
 
-        if i == 0:
-            ax1.plot(x, ideal, "k--", linewidth=0.8, label=r"ideal hydro") 
         #
         # ax1.plot(xekt, Tttekt, color=colors[i], linewidth=1.2, linestyle="--", label=labels[i])
 
-    ax1.plot(xfree, freeTtt, "k:", linewidth=0.8, label=r"free stream") 
+    ax1.plot(xfree, freeTtt, "k:", linewidth=0.80, label=r"free streaming") 
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$T^{tt}$')
     ax1.legend(loc="upper center",fontsize=8)
