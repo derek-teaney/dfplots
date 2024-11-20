@@ -279,6 +279,7 @@ def plotStress(case='DF', lambdaekt=20):
     fig1.tight_layout() 
 
     name = "test1_{}_{}.pdf".format(case,lambdaekt)
+    fig1.tight_layout()
     fig1.savefig(name)
         
 ################################################################################
@@ -339,8 +340,8 @@ def plotKTPlot1(case='DF'):
     ax1.annotate(r'$4\pi\eta/s$={:.1f} and ${:.1f}$'.format(4.0*np.pi*list_etabys[0], 4.0*np.pi*list_etabys[1]), (0.85,0.25), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
 
     ax1.legend(handler_map={line1: HandlerDoubleLine()}, loc="lower left")
-    fig1.tight_layout() 
 
+    fig1.tight_layout() 
     fig1.savefig('KTPlot1_{}.pdf'.format(case))
 
 
@@ -384,6 +385,7 @@ def plotKTPlot1b(case='DF'):
 
     ax1.legend(loc="lower left")
 
+    fig1.tight_layout()
     fig1.savefig('KTPlot1b_{}.pdf'.format(case))
 
 def plotKTPlot2(case='DF'):
@@ -442,8 +444,8 @@ def plotKTPlot2(case='DF'):
     ax1.annotate(r'$4\pi\eta/s$={:.1f} and ${:.1f}$'.format(4.0*np.pi*list_etabys[0], 4.0*np.pi*list_etabys[1]), (0.85,0.80), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
 
     ax1.legend(handler_map={line1: HandlerDoubleLine()}, loc="upper left")
-    fig1.tight_layout() 
 
+    fig1.tight_layout() 
     fig1.savefig('KTPlot2_{}.pdf'.format(case))
 
 
@@ -485,6 +487,7 @@ def plotKTPlot2b(case='DF'):
 
     ax1.legend(loc="upper left")
 
+    fig1.tight_layout() 
     fig1.savefig('KTPlot2b_{}.pdf'.format(case))
 
 def plotKTOnlyPlot2(case='DF',figname='KineticOnlyT2.pdf'):
@@ -541,6 +544,8 @@ def plotKTOnlyPlot2(case='DF',figname='KineticOnlyT2.pdf'):
     ax1.legend(loc="upper left",fontsize=8, ncols=2,alignment='left',  title="QCD kinetics")
 
     #ax1.annotate("EKT\ntest 1", (0.87,0.8), ha='right', xycoords='figure fraction')
+
+    fig1.tight_layout() 
     fig1.savefig(figname)
 
 def plotKTOnlyPlot1(case='DF',figname='KineticOnlyT1.pdf'):
@@ -592,10 +597,13 @@ def plotKTOnlyPlot1(case='DF',figname='KineticOnlyT1.pdf'):
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$T^{tt}$')
     #ax1.annotate(r'EKT', (0.41,0.38), xycoords='figure fraction', ha='right',bbox=dict(alpha=0.8,facecolor='white',edgecolor='white'))
-    ax1.annotate(r'QCD kinetics', (0.04,0.95), xycoords='axes fraction', ha='left',va='top')
+    #ax1.annotate(r'QCD kinetics', (0.04,0.95), xycoords='axes fraction', ha='left',va='top')
+    legendleft = ax1.legend(handles=[],loc="upper left", alignment='left', title = r'QCD kinetics')
+    ax1.add_artist(legendleft)
     ax1.legend(loc="lower left",fontsize=8, ncol=2)
 
     #ax1.annotate("EKT\ntest 1", (0.87,0.8), ha='right', xycoords='figure fraction')
+    fig1.tight_layout() 
     fig1.savefig(figname)
 
 def plotKTOnlyPlotM(case='test1'):
@@ -611,7 +619,7 @@ def plotKTOnlyPlotM(case='test1'):
     ax1.set_ylim(0.0, 0.5)
     ax1.set_xticks([-75,-50,-25,0,25,50,75])
     if case=='test1':
-        ax1.set_ylim(-0.5, 0.8)
+        ax1.set_ylim(-0.5, 0.75)
     elif case=='test2':
         ax1.set_ylim(-1., 1.6)
 
@@ -658,6 +666,7 @@ def plotKTOnlyPlotM(case='test1'):
     ax1.legend(loc="upper left",fontsize=8, alignment='left', title='QCD kinetics')
 
     #ax1.annotate("EKT\ntest 1", (0.87,0.8), ha='right', xycoords='figure fraction')
+    fig1.tight_layout() 
     fig1.savefig(figname)
 
 plotKTOnlyPlot1()
